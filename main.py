@@ -9,6 +9,7 @@ import logging
 from PIL import Image as PILImage
 from PIL import ImageDraw as PILImageDraw
 from PIL import ImageFont as PILImageFont
+from astrbot.api import AstrBotConfig
 from astrbot.api.all import AstrMessageEvent, CommandResult, Context, Image, Plain
 import astrbot.api.event.filter as filter
 from astrbot.api.star import register, Star
@@ -18,8 +19,9 @@ logger = logging.getLogger("astrbot")
 
 @register("astrbot_plugin_essential", "Soulter", "", "", "")
 class Main(Star):
-    def __init__(self, context: Context) -> None:
+    def __init__(self, context: Context, config: AstrBotConfig) -> None:
         super().__init__(context)
+        self.config = config
         self.PLUGIN_NAME = "astrbot_plugin_essential"
         PLUGIN_NAME = self.PLUGIN_NAME
         path = os.path.abspath(os.path.dirname(__file__))
@@ -48,6 +50,14 @@ class Main(Star):
         self.search_anmime_demand_users = {}
         self.daily_sleep_cache = {}
         self.good_morning_cd = {} 
+
+    def _get_report_font_size(self) -> int:
+        size = self.config.get("report_font_size", 65)
+        try:
+            size = int(size)
+        except (TypeError, ValueError):
+            return 65
+        return size if size > 0 else 65
 
     def time_convert(self, t):
         m, s = divmod(t, 60)
@@ -154,7 +164,7 @@ class Main(Star):
         bg = path + "/congrats.jpg"
         img = PILImage.open(bg)
         draw = PILImageDraw.Draw(img)
-        font = PILImageFont.truetype(path + "/simhei.ttf", 65)
+        font = PILImageFont.truetype(path + "/simhei.ttf", self._get_report_font_size())
 
         # Calculate the width and height of the text
         text_width, text_height = draw.textbbox((0, 0), msg, font=font)[2:4]
@@ -186,7 +196,7 @@ class Main(Star):
         bg = path + "/uncongrats.jpg"
         img = PILImage.open(bg)
         draw = PILImageDraw.Draw(img)
-        font = PILImageFont.truetype(path + "/simhei.ttf", 65)
+        font = PILImageFont.truetype(path + "/simhei.ttf", self._get_report_font_size())
 
         # Calculate the width and height of the text
         text_width, text_height = draw.textbbox((0, 0), msg, font=font)[2:4]
